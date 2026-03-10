@@ -1,17 +1,30 @@
 from django.shortcuts import render
-# login and register form 
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse
+from django.db.models import Q
+
+from django.core.paginator import Paginator
+
 from . form import ContactForm
 from .models import *
 
 # Create your views here.
 
 def index(request):
-    data={
-        'products':Product.objects.all()
-    }
-    return render(request, 'pages/index.html', data)
+    search = request.GET.get('search')
+    if search:
+        data = Product.objects.filter(Q(name__icontains=search) 
+                                      | Q(category__name__icontains=search))
+        sendData={
+            'products': data
+        }
+        return render(request, 'pages/search-list.html', sendData)
+    else:
+        data={
+            'products':Product.objects.all()
+        }
+        return render(request, 'pages/index.html', data)
 
 
 def user_login(request):
@@ -74,3 +87,24 @@ def contact(request):
                 'form': ContactForm()
             }
             return render(request, 'pages/contact.html', data)  
+        
+
+def category_views(request, category_slug):
+    category = Category.objects.get(slug=category_slug)
+    cat_id = category.id
+    products = Product.objects.filter(category=cat_id)
+    data={
+        'products': products
+    }
+    return render(request, 'pages/category-products.html', data)
+
+
+def products_list(request):
+    products = Product.objects.all()
+    paginator = Paginator(products, 3) 
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    data={
+        'products': page_obj
+    }
+    return render(request, 'pages/products.html', data)
