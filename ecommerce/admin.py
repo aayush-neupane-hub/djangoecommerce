@@ -23,6 +23,7 @@ class CategoryAdmin(MPTTModelAdmin):
             fields.append('posted_by')
         fields.extend(['name', 'slug', 'parent', 'image', 'description', 'meta_title', 'meta_description'])
         return fields
+    
     def save_model(self, request, obj, form, change):
         if not obj.pk:
             obj.posted_by = request.user
